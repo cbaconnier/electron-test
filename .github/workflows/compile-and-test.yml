@@ -66,17 +66,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libnss3 \
-            libatk1.0-0 \
-            libatk-bridge2.0-0 \
-            libcups2 \
-            libxcomposite1 \
-            libxrandr2 \
+            libgbm-dev \
+            libxkbcommon-x11-0 \
+            libgtk-3-0 \
             libasound2t64 \
-            libpangocairo-1.0-0 \
-            libpango-1.0-0 \
-            libgdk-pixbuf2.0-0 \
-            libgtk-3-0
+            libxss1 \
+            xvfb
 
       # Debug: Print environment variables
       - name: Print environment variables
@@ -91,6 +86,16 @@ jobs:
       - run: npm run compile -- -p never
         env:
           VITE_DISTRIBUTION_CHANNEL: ${{inputs.distribution-channel}}
+
+      - name: Set executable permissions
+        if: matrix.os == 'ubuntu-latest'
+        run: chmod +x dist/linux-unpacked/root
+
+      - name: Debug executable path
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          ls -la dist/linux-unpacked/
+          file dist/linux-unpacked/root
 
       # Debug: Capture Electron logs
       - name: Run tests with Electron debug logs
