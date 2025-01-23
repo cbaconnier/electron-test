@@ -29,7 +29,6 @@ env:
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
   npm_config_audit: false
   npm_config_fund: false
-  DEBUG: "electron:*,pw:api" # Enable Electron and Playwright debug logs
 
 jobs:
   typeckeck:
@@ -60,74 +59,23 @@ jobs:
 
       - run: npm version "${{inputs.app-version}}" --no-git-tag-version
 
-      # Install X11 and graphics dependencies for Linux
-      - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            xvfb \
-            libxkbcommon-x11-0 \
-            libxcb-icccm4 \
-            libxcb-image0 \
-            libxcb-keysyms1 \
-            libxcb-randr0 \
-            libxcb-render-util0 \
-            libxcb-xinerama0 \
-            libxcb-xfixes0 \
-            x11-utils \
-            libgl1-mesa-dri \
-            libgl1 \
-            libglx-mesa0 \
-            libnss3 \
-            libatk1.0-0 \
-            libatk-bridge2.0-0 \
-            libgdk-pixbuf2.0-0 \
-            libgtk-3-0 \
-            libgbm1
-
-      # Debug: Print environment variables
-      - name: Print environment variables
-        run: env
-
-      # Debug: Check for missing dependencies
-      - name: Check missing libraries
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          ldd node_modules/electron/dist/electron | grep "not found" || echo "All dependencies found"
-
       # Compile the app
       - run: npm run compile -- -p never
         env:
           VITE_DISTRIBUTION_CHANNEL: ${{inputs.distribution-channel}}
 
-      - name: Debug executable path
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          ls -la dist/linux-unpacked/
-          file dist/linux-unpacked/root
-
-      # Set executable permissions
-      - name: Set executable permissions
-        if: matrix.os == 'ubuntu-latest'
-        run: chmod +x dist/linux-unpacked/root
-
-      # Run tests with xvfb for Linux
+      # Run tests for Linux
+      # https://github.com/electron/electron/issues/42510
       - name: Run tests
         if: matrix.os == 'ubuntu-latest'
         run: |
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-            xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- npx playwright test
-        env:
-          DEBUG: "electron:*,pw:api"
-          DISPLAY: ":99.0"
+            npm run test --if-present
 
       # Run tests normally for other platforms
       - name: Run tests (non-Linux)
         if: matrix.os != 'ubuntu-latest'
         run: npm run test --if-present
-        env:
-          DEBUG: "electron:*,pw:api"
 
       - uses: actions/attest-build-provenance@v2
         with:
