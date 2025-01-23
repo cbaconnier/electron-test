@@ -27,17 +27,26 @@ const test = base.extend<TestFixtures>({
 
       const [executablePath] = globSync(executablePattern);
       if (!executablePath) {
+        console.error("Executable path not found. Pattern:", executablePattern);
         throw new Error("App Executable path not found");
       }
+
+      console.log("Launching Electron app with executable:", executablePath);
 
       const electronApp = await electron.launch({
         executablePath: executablePath,
       });
 
       electronApp.on("console", (msg) => {
-        if (msg.type() === "error") {
-          console.error(`[electron][${msg.type()}] ${msg.text()}`);
-        }
+        console.log(`[electron][${msg.type()}] ${msg.text()}`);
+      });
+
+      electronApp.on("pageerror", (error) => {
+        console.error("[electron][pageerror]", error);
+      });
+
+      electronApp.on("close", () => {
+        console.log("[electron] Electron app closed");
       });
 
       await use(electronApp);
@@ -52,11 +61,11 @@ const test = base.extend<TestFixtures>({
     const page = await electronApp.firstWindow();
     // capture errors
     page.on("pageerror", (error) => {
-      console.error(error);
+      console.error("[page][error]", error);
     });
     // capture console messages
     page.on("console", (msg) => {
-      console.log(msg.text());
+      console.log("[page][console]", msg.text());
     });
 
     await page.waitForLoadState("load");

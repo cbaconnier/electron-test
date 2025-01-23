@@ -29,6 +29,7 @@ env:
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
   npm_config_audit: false
   npm_config_fund: false
+  DEBUG: "electron:*,pw:api" # Enable Electron and Playwright debug logs
 
 jobs:
   typeckeck:
@@ -58,11 +59,26 @@ jobs:
           renderer-template: ${{inputs.renderer-template}}
 
       - run: npm version "${{inputs.app-version}}" --no-git-tag-version
+
+      # Debug: Print environment variables
+      - name: Print environment variables
+        run: env
+
+      # Debug: Check for missing dependencies
+      - name: Check missing libraries
+        run: |
+          ldd node_modules/electron/dist/electron | grep "not found" || echo "All dependencies found"
+
+      # Compile the app
       - run: npm run compile -- -p never
         env:
           VITE_DISTRIBUTION_CHANNEL: ${{inputs.distribution-channel}}
 
-      - run: npm run test --if-present
+      # Debug: Capture Electron logs
+      - name: Run tests with Electron debug logs
+        env:
+          DEBUG: "electron:*,pw:api"
+        run: npm run test --if-present
 
       - uses: actions/attest-build-provenance@v2
         with:
