@@ -60,6 +60,24 @@ jobs:
 
       - run: npm version "${{inputs.app-version}}" --no-git-tag-version
 
+      # Install dependencies for Electron
+      - name: Install dependencies for Electron
+        if: matrix.os == 'ubuntu-latest' # Only needed for Linux
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 \
+            libatk1.0-0 \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libxcomposite1 \
+            libxrandr2 \
+            libasound2 \
+            libpangocairo-1.0-0 \
+            libpango-1.0-0 \
+            libgdk-pixbuf2.0-0 \
+            libgtk-3-0
+
       # Debug: Print environment variables
       - name: Print environment variables
         run: env
