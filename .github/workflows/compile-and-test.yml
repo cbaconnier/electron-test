@@ -77,7 +77,8 @@ jobs:
             libxcb-xfixes0 \
             x11-utils \
             libgl1-mesa-dri \
-            libgl1-mesa-glx \
+            libgl1 \
+            libglx-mesa0 \
             libnss3 \
             libatk1.0-0 \
             libatk-bridge2.0-0 \
